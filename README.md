@@ -1,85 +1,178 @@
-# Projet Business Intelligence - Datawarehouse Criminalité Irlande
+# 🤖 Smart Test Assistant - QA Automation Platform
 
 ## 📊 Description
 
-Projet complet de Business Intelligence comprenant :
-- **Datawarehouse** pour l'analyse des statistiques de criminalité en Irlande
-- **Backend API** pour l'accès aux données
-- **Frontend** pour la visualisation interactive
-- **Service AI** pour l'analyse avancée
+**Smart Test Assistant** est une plateforme intelligente de gestion et d'automatisation des tests QA, propulsée par l'IA. Elle permet de :
+
+- 🎯 **Générer automatiquement des cas de test** à partir de User Stories (avec OpenAI GPT)
+- 🔍 **Classifier automatiquement les bugs** par catégorie (performance, sécurité, UX/UI, etc.)
+- 📈 **Prioriser les tests** pour l'automatisation selon des critères intelligents
+- 📊 **Suivre les campagnes de test** et les exécutions en temps réel
+- 🐛 **Gérer les bugs** avec traçabilité complète
+- 📉 **Visualiser les métriques** via un dashboard interactif
 
 ## 🏗️ Architecture
 
 ```
-projet-developpement/
-├── backend/              # API Backend
-├── frontend/             # Interface utilisateur
-├── ai-service/           # Service d'analyse IA
-├── create_datawarehouse.sql   # Schéma de la base de données
-├── load_datawarehouse.py      # Script de chargement des données
-├── analyse_qa_tnr.py          # Analyse qualité
-└── docker-compose.yml         # Configuration Docker
+smart-test-assistant/
+├── backend/              # API REST (Node.js + Express + MongoDB)
+│   ├── models/          # User, TestCase, Bug, Campaign, Execution
+│   ├── controllers/     # Logique métier
+│   ├── routes/          # Endpoints API
+│   └── middleware/      # Auth JWT + RBAC
+├── frontend/            # Interface React + TypeScript + Material-UI
+│   ├── pages/          # Dashboard, TestCases, Bugs, Campaigns, etc.
+│   ├── store/          # Redux Toolkit (state management)
+│   └── services/       # API client (Axios)
+├── ai-service/          # Service IA (FastAPI + Python)
+│   └── main.py         # Génération tests, classification bugs, priorisation
+└── docker-compose.yml   # Orchestration des services
 ```
+
+## ✨ Fonctionnalités Principales
+
+### 🧠 Intelligence Artificielle
+- **Génération de tests** : Créez automatiquement 4-8 cas de test à partir d'une User Story
+  - Cas nominaux (positifs)
+  - Cas d'erreur (négatifs)
+  - Cas limites et validation
+  - Tests de sécurité (injection SQL, brute force)
+- **Classification de bugs** : Analyse automatique par mots-clés (performance, sécurité, UX/UI, régression, fonctionnel)
+- **Priorisation intelligente** : Score d'automatisation basé sur la fréquence, criticité, durée manuelle
+
+### 📋 Gestion Complète
+- **User Stories** : Création, édition, suivi avec critères d'acceptation
+- **Test Cases** : Gestion détaillée avec étapes, préconditions, priorités
+- **Test Plans** : Organisation des tests par plan
+- **Campagnes** : Exécution groupée de tests
+- **Bugs** : Suivi avec sévérité, statut, assignation
+
+### 📊 Dashboard & Analytics
+- KPIs en temps réel (stories, tests, bugs, exécutions)
+- Graphiques de distribution (statuts, sévérités)
+- Tendances temporelles
+- Taux de réussite des tests
+
+### 🔐 Sécurité & Permissions
+- Authentification JWT
+- RBAC (Role-Based Access Control) : Admin, QA Lead, Tester, Developer
+- Permissions granulaires par rôle
 
 ## 🚀 Démarrage Rapide
 
 ### Prérequis
-- Python 3.8+
-- Node.js 14+
-- MySQL 8.0+
-- Docker (optionnel)
+- **Node.js** 16+ & npm
+- **Python** 3.9+
+- **MongoDB** 5.0+
+- **Docker** & Docker Compose (optionnel)
+- **Clé API OpenAI** (optionnel, pour génération IA avancée)
 
-### Installation
+### Installation Locale
 
-1. **Cloner le dépôt**
+#### 1. Cloner le dépôt
 ```bash
-git clone <votre-repo-url>
-cd projet-developpement
+git clone https://github.com/SouliEya/Projet-de-developpement-.git
+cd Projet-de-developpement-
 ```
 
-2. **Installer les dépendances Python**
-```bash
-pip install -r requirements.txt
-```
-
-3. **Configurer la base de données**
-```bash
-mysql -u root -p < create_datawarehouse.sql
-```
-
-4. **Configurer les variables d'environnement**
+#### 2. Configurer les variables d'environnement
 ```bash
 cp .env.example .env
-# Éditer .env avec vos paramètres
+# Éditer .env avec vos paramètres (MongoDB, JWT secret, OpenAI key)
 ```
 
-5. **Charger les données**
+#### 3. Backend (Node.js)
 ```bash
-python load_datawarehouse.py
+cd backend
+npm install
+npm run dev
+# Backend démarre sur http://localhost:5000
 ```
 
-### Avec Docker
+#### 4. Frontend (React)
+```bash
+cd frontend
+npm install
+npm start
+# Frontend démarre sur http://localhost:3000
+```
+
+#### 5. AI Service (Python)
+```bash
+cd ai-service
+pip install -r requirements.txt
+python main.py
+# AI Service démarre sur http://localhost:8000
+```
+
+### 🐳 Installation avec Docker (Recommandé)
+
 ```bash
 docker-compose up -d
 ```
 
-## 📚 Documentation
-
-- [Guide du Datawarehouse](README_TP_BI.md)
-- [Guide Visual Studio 2022](GUIDE_VISUAL_STUDIO_2022.md)
+**Services disponibles :**
+- Frontend : http://localhost:3000
+- Backend API : http://localhost:5000
+- AI Service : http://localhost:8000
+- MongoDB : localhost:27017
 
 ## 🛠️ Technologies
 
-- **Backend**: C# / .NET, Python
-- **Frontend**: React / Node.js
-- **Base de données**: MySQL
-- **Conteneurisation**: Docker
-- **IA**: Service d'analyse personnalisé
+### Backend
+- **Node.js** + **Express.js**
+- **MongoDB** + **Mongoose**
+- **JWT** (authentification)
+- **bcrypt** (hashage mots de passe)
+- **Helmet** + **CORS** (sécurité)
+
+### Frontend
+- **React 18** + **TypeScript**
+- **Material-UI (MUI)** - Design system
+- **Redux Toolkit** - State management
+- **React Router** - Navigation
+- **Recharts** - Visualisations
+- **Axios** - HTTP client
+
+### AI Service
+- **FastAPI** (Python)
+- **OpenAI GPT-3.5** (génération de tests)
+- **Pydantic** (validation)
+- **Algorithmes rule-based** (fallback sans OpenAI)
+
+### DevOps
+- **Docker** + **Docker Compose**
+- **Git** + **GitHub**
+
+## 📚 Documentation Complémentaire
+
+- [Guide Visual Studio 2022](GUIDE_VISUAL_STUDIO_2022.md)
+- [Documentation TP BI](README_TP_BI.md) - Projet annexe datawarehouse
+
+## � Comptes par Défaut
+
+Après le seed initial (`npm run seed` dans backend) :
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Admin | admin@test.com | admin123 |
+| QA Lead | qa@test.com | qa123 |
+| Tester | tester@test.com | tester123 |
+| Developer | dev@test.com | dev123 |
+
+## 🤝 Contribution
+
+Ce projet est développé dans un cadre académique. Les contributions sont les bienvenues !
 
 ## 📝 Licence
 
-Ce projet est développé dans un cadre académique.
+Projet académique - Tous droits réservés
 
 ## 👥 Auteur
 
-Eya Souli
+**Eya Souli**  
+Projet de développement - Smart Test Assistant
+
+---
+
+⭐ **N'oubliez pas de mettre une étoile si ce projet vous plaît !**
