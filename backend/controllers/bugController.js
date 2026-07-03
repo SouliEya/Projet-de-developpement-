@@ -1,9 +1,27 @@
 const axios = require('axios');
 const Bug = require('../models/Bug');
+const TestCase = require('../models/TestCase');
+const User = require('../models/User');
 
 exports.create = async (req, res) => {
   try {
     const bugData = { ...req.body, createdBy: req.user._id };
+
+    // Si un test case est lié, récupérer automatiquement la user story
+    if (bugData.testCase) {
+      const testCase = await TestCase.findById(bugData.testCase).populate('userStory');
+      if (testCase && testCase.userStory) {
+        bugData.story = testCase.userStory._id;
+      }
+    }
+
+    // Assigner automatiquement au Product Owner (PO)
+    if (!bugData.assignedTo) {
+      const productOwner = await User.findOne({ role: 'product_owner', isActive: true });
+      if (productOwner) {
+        bugData.assignedTo = productOwner._id;
+      }
+    }
 
     if (!bugData.classification || bugData.classification === 'unclassified') {
       try {
@@ -20,7 +38,13 @@ exports.create = async (req, res) => {
     }
 
     const bug = await Bug.create(bugData);
-    res.status(201).json(bug);
+    const populatedBug = await Bug.findById(bug._id)
+      .populate('assignedTo', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('testCase', 'title')
+      .populate('story', 'title');
+    
+    res.status(201).json(populatedBug);
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }

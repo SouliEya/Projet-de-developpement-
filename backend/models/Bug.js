@@ -25,6 +25,7 @@ const bugSchema = new mongoose.Schema({
   },
   classificationConfidence: { type: Number, min: 0, max: 100, default: 0 },
   screenshots:    [{ type: String }],
+  story:          { type: mongoose.Schema.Types.ObjectId, ref: 'UserStory' },
   testCase:       { type: mongoose.Schema.Types.ObjectId, ref: 'TestCase' },
   testExecution:  { type: mongoose.Schema.Types.ObjectId, ref: 'TestExecution' },
   assignedTo:     { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

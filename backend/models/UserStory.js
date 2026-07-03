@@ -12,7 +12,7 @@ const userStorySchema = new mongoose.Schema({
   sprint:  { type: String, trim: true },
   status: {
     type: String,
-    enum: ['draft', 'ready', 'in_progress', 'done'],
+    enum: ['draft', 'ready', 'todo', 'in_progress', 'ready_qa', 'testing', 'done'],
     default: 'draft'
   },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

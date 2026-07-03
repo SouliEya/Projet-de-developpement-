@@ -22,6 +22,7 @@ app.use('/api/testplans', require('./routes/testplans'));
 app.use('/api/campaigns', require('./routes/campaigns'));
 app.use('/api/execution', require('./routes/execution'));
 app.use('/api/bugs', require('./routes/bugs'));
+app.use('/api/sprints', require('./routes/sprints'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));

@@ -7,5 +7,6 @@ router.use(auth);
 router.post('/run', ctrl.run);
 router.get('/results', ctrl.getResults);
 router.get('/:id', ctrl.getById);
+router.put('/:id', ctrl.update);
 
 module.exports = router;

@@ -39,6 +39,16 @@ const Dashboard: React.FC = () => {
   const bugPieData = (stats.bugs?.bySeverity || []).map((s: any) => ({ name: s._id, value: s.count }));
   const trendData = stats.trend || [];
 
+  const getExecutionColor = (status: string) => {
+    const colorMap: any = {
+      'passed': '#2e7d32',
+      'failed': '#c62828',
+      'blocked': '#ef6c00',
+      'skipped': '#757575'
+    };
+    return colorMap[status.toLowerCase()] || '#1565c0';
+  };
+
   return (
     <Box>
       <Typography variant="h4" fontWeight={700} sx={{ mb: 3 }}>Dashboard</Typography>
@@ -70,7 +80,7 @@ const Dashboard: React.FC = () => {
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie data={execPieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                      {execPieData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                      {execPieData.map((entry: any, i: number) => <Cell key={i} fill={getExecutionColor(entry.name)} />)}
                     </Pie>
                     <Tooltip />
                   </PieChart>
@@ -130,7 +140,7 @@ const Dashboard: React.FC = () => {
       </Grid>
 
       {trendData.length > 0 && (
-        <Card>
+        <Card sx={{ mb: 4 }}>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2 }}>Tendance des Exécutions (30 jours)</Typography>
             <ResponsiveContainer width="100%" height={300}>
@@ -148,6 +158,61 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>Résultats d'Exécution par User Story</Typography>
+              {stats.executions?.byStory && stats.executions.byStory.length > 0 ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={stats.executions.byStory}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="_id" angle={-45} textAnchor="end" height={100} tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="passed" fill="#2e7d32" name="Passés" stackId="a" />
+                    <Bar dataKey="failed" fill="#c62828" name="Échoués" stackId="a" />
+                    <Bar dataKey="blocked" fill="#ef6c00" name="Bloqués" stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <Typography color="text.secondary" sx={{ textAlign: 'center', py: 8 }}>
+                  Aucune donnée d'exécution par story
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>Bugs par Sévérité et User Story</Typography>
+              {stats.bugs?.byStory && stats.bugs.byStory.length > 0 ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={stats.bugs.byStory}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="_id" angle={-45} textAnchor="end" height={100} tick={{ fontSize: 10 }} />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="critical" fill="#c62828" name="Critique" stackId="a" />
+                    <Bar dataKey="high" fill="#ef6c00" name="Haute" stackId="a" />
+                    <Bar dataKey="medium" fill="#ffa726" name="Moyenne" stackId="a" />
+                    <Bar dataKey="low" fill="#66bb6a" name="Basse" stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <Typography color="text.secondary" sx={{ textAlign: 'center', py: 8 }}>
+                  Aucun bug par story
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

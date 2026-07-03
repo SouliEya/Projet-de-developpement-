@@ -16,4 +16,8 @@ router.get('/:id', ctrl.getById);
 router.put('/:id', authorize('admin', 'qa_engineer'), ctrl.update);
 router.delete('/:id', authorize('admin', 'qa_engineer'), ctrl.remove);
 
+router.get('/:id/tests', ctrl.getTestCases);
+router.post('/:id/generate-tests', authorize('admin', 'qa_engineer'), ctrl.generateTests);
+router.get('/:id/bugs', ctrl.getBugs);
+
 module.exports = router;

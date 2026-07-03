@@ -6,6 +6,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import UserStories from './pages/UserStories';
+import StoryTestCases from './pages/StoryTestCases';
+import StoryBugs from './pages/StoryBugs';
+import BacklogUnified from './pages/BacklogUnified';
+import Sprints from './pages/Sprints';
 import TestCases from './pages/TestCases';
 import Campaigns from './pages/Campaigns';
 import Execution from './pages/Execution';
@@ -26,8 +30,28 @@ const App: React.FC = () => {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="stories" element={
-          <ProtectedRoute roles={['admin', 'qa_engineer', 'test_manager']}>
+          <ProtectedRoute roles={['admin', 'qa_engineer', 'test_manager', 'product_owner']}>
             <UserStories />
+          </ProtectedRoute>
+        } />
+        <Route path="stories/:id/tests" element={
+          <ProtectedRoute roles={['admin', 'qa_engineer', 'test_manager']}>
+            <StoryTestCases />
+          </ProtectedRoute>
+        } />
+        <Route path="stories/:id/bugs" element={
+          <ProtectedRoute roles={['admin', 'qa_engineer', 'test_manager', 'developer', 'product_owner']}>
+            <StoryBugs />
+          </ProtectedRoute>
+        } />
+        <Route path="backlog" element={
+          <ProtectedRoute roles={['admin', 'qa_engineer', 'test_manager', 'product_owner']}>
+            <BacklogUnified />
+          </ProtectedRoute>
+        } />
+        <Route path="sprints" element={
+          <ProtectedRoute roles={['admin', 'qa_engineer', 'test_manager', 'product_owner']}>
+            <Sprints />
           </ProtectedRoute>
         } />
         <Route path="testcases" element={

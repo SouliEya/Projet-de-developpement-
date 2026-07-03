@@ -9,23 +9,29 @@ import {
 } from '@mui/material';
 import {
   Menu as MenuIcon, Dashboard, Description, BugReport, PlayArrow,
-  Science, People, Campaign, Logout, AccountCircle
+  Science, People, Campaign, Logout, AccountCircle, Inventory, DirectionsRun
 } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 260;
 
 const menuItems = [
-  { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard', roles: ['admin', 'qa_engineer', 'test_manager', 'developer'] },
-  { text: 'User Stories', icon: <Description />, path: '/stories', roles: ['admin', 'qa_engineer', 'test_manager'] },
+  { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard', roles: ['admin', 'qa_engineer', 'test_manager', 'developer', 'product_owner'] },
+  { text: 'User Stories', icon: <Description />, path: '/stories', roles: ['admin', 'qa_engineer', 'test_manager', 'product_owner'] },
+  { text: 'Backlog', icon: <Inventory />, path: '/backlog', roles: ['admin', 'qa_engineer', 'test_manager', 'product_owner'] },
+  { text: 'Sprints', icon: <DirectionsRun />, path: '/sprints', roles: ['admin', 'qa_engineer', 'test_manager', 'product_owner'] },
   { text: 'Plans de Test', icon: <Science />, path: '/testcases', roles: ['admin', 'qa_engineer', 'test_manager'] },
   { text: 'Campagnes', icon: <Campaign />, path: '/campaigns', roles: ['admin', 'qa_engineer', 'test_manager'] },
   { text: 'Exécution', icon: <PlayArrow />, path: '/execution', roles: ['admin', 'qa_engineer'] },
-  { text: 'Bugs', icon: <BugReport />, path: '/bugs', roles: ['admin', 'qa_engineer', 'test_manager', 'developer'] },
+  { text: 'Bugs', icon: <BugReport />, path: '/bugs', roles: ['admin', 'qa_engineer', 'test_manager', 'developer', 'product_owner'] },
   { text: 'Utilisateurs', icon: <People />, path: '/users', roles: ['admin'] },
 ];
 
 const roleLabels: Record<string, string> = {
-  admin: 'Admin', qa_engineer: 'QA Engineer', test_manager: 'Test Manager', developer: 'Développeur'
+  admin: 'Admin', 
+  qa_engineer: 'QA Engineer', 
+  test_manager: 'Test Manager', 
+  developer: 'Développeur',
+  product_owner: 'Product Owner'
 };
 
 const Layout: React.FC = () => {

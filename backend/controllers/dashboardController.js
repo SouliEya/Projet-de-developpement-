@@ -19,7 +19,9 @@ exports.getStatistics = async (req, res) => {
       bugsBySeverity,
       bugsByClassification,
       totalCampaigns,
-      recentExecutions
+      recentExecutions,
+      executionsByStory,
+      bugsByStory
     ] = await Promise.all([
       UserStory.countDocuments(),
       UserStory.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
@@ -42,6 +44,35 @@ exports.getStatistics = async (req, res) => {
         }},
         { $sort: { _id: -1 } },
         { $limit: 30 }
+      ]),
+      TestExecution.aggregate([
+        { $lookup: { from: 'testcases', localField: 'testCase', foreignField: '_id', as: 'testCaseData' } },
+        { $unwind: '$testCaseData' },
+        { $lookup: { from: 'userstories', localField: 'testCaseData.userStory', foreignField: '_id', as: 'storyData' } },
+        { $unwind: { path: '$storyData', preserveNullAndEmptyArrays: true } },
+        { $group: {
+          _id: '$storyData.title',
+          passed: { $sum: { $cond: [{ $eq: ['$status', 'passed'] }, 1, 0] } },
+          failed: { $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] } },
+          blocked: { $sum: { $cond: [{ $eq: ['$status', 'blocked'] }, 1, 0] } }
+        }},
+        { $match: { _id: { $ne: null } } },
+        { $sort: { _id: 1 } },
+        { $limit: 10 }
+      ]),
+      Bug.aggregate([
+        { $lookup: { from: 'userstories', localField: 'story', foreignField: '_id', as: 'storyData' } },
+        { $unwind: { path: '$storyData', preserveNullAndEmptyArrays: true } },
+        { $group: {
+          _id: '$storyData.title',
+          critical: { $sum: { $cond: [{ $eq: ['$severity', 'critical'] }, 1, 0] } },
+          high: { $sum: { $cond: [{ $eq: ['$severity', 'high'] }, 1, 0] } },
+          medium: { $sum: { $cond: [{ $eq: ['$severity', 'medium'] }, 1, 0] } },
+          low: { $sum: { $cond: [{ $eq: ['$severity', 'low'] }, 1, 0] } }
+        }},
+        { $match: { _id: { $ne: null } } },
+        { $sort: { _id: 1 } },
+        { $limit: 10 }
       ])
     ]);
 
@@ -61,7 +92,8 @@ exports.getStatistics = async (req, res) => {
         passed: execMap.passed || 0,
         failed: execMap.failed || 0,
         blocked: execMap.blocked || 0,
-        skipped: execMap.skipped || 0
+        skipped: execMap.skipped || 0,
+        byStory: executionsByStory
       },
       bugs: {
         total: totalBugs,
@@ -69,7 +101,8 @@ exports.getStatistics = async (req, res) => {
         bySeverity: bugsBySeverity,
         byClassification: bugsByClassification,
         open: bugsByStatus.find(b => b._id === 'open')?.count || 0,
-        closed: bugsByStatus.find(b => b._id === 'closed')?.count || 0
+        closed: bugsByStatus.find(b => b._id === 'closed')?.count || 0,
+        byStory: bugsByStory
       },
       campaigns: { total: totalCampaigns },
       trend: recentExecutions.reverse()

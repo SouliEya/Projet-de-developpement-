@@ -35,6 +35,30 @@ exports.run = async (req, res) => {
   }
 };
 
+exports.update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, comment, duration, campaign } = req.body;
+
+    const execution = await TestExecution.findByIdAndUpdate(
+      id,
+      { status, comment, duration, campaign },
+      { new: true }
+    )
+      .populate('testCase', 'testId title')
+      .populate('executedBy', 'firstName lastName')
+      .populate('campaign', 'name');
+
+    if (!execution) {
+      return res.status(404).json({ message: 'Exécution non trouvée.' });
+    }
+
+    res.json(execution);
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
+  }
+};
+
 exports.getResults = async (req, res) => {
   try {
     const { campaign, testCase, status, page = 1, limit = 50 } = req.query;

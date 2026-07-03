@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../store/store';
 import { fetchStories, createStory, updateStory, deleteStory } from '../store/slices/storySlice';
 import { generateTestCases } from '../store/slices/testcaseSlice';
@@ -7,14 +8,24 @@ import {
   Box, Typography, Button, Card, CardContent, Chip, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField, MenuItem, Grid, CircularProgress, Alert, Tooltip
 } from '@mui/material';
-import { Add, Edit, Delete, Science, AutoAwesome, Visibility } from '@mui/icons-material';
+import { Add, Edit, Delete, Science, AutoAwesome, Visibility, BugReport, DirectionsRun } from '@mui/icons-material';
 import DetailDialog from '../components/DetailDialog';
+import AddToSprintDialog from '../components/AddToSprintDialog';
 
 const priorityColors: any = { critical: 'error', high: 'warning', medium: 'info', low: 'default' };
-const statusColors: any = { draft: 'default', ready: 'info', in_progress: 'warning', done: 'success' };
+const statusColors: any = { 
+  draft: 'default', 
+  ready: 'info', 
+  todo: 'default',
+  in_progress: 'warning', 
+  ready_qa: 'primary',
+  testing: 'secondary',
+  done: 'success' 
+};
 
 const UserStories: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { stories, loading } = useSelector((state: RootState) => state.stories);
   const { generating } = useSelector((state: RootState) => state.testcases);
   const [open, setOpen] = useState(false);
@@ -22,6 +33,8 @@ const UserStories: React.FC = () => {
   const [form, setForm] = useState({ title: '', description: '', priority: 'medium', sprint: '', status: 'draft', acceptanceCriteria: '' });
   const [genSuccess, setGenSuccess] = useState('');
   const [detailStory, setDetailStory] = useState<any>(null);
+  const [sprintDialogOpen, setSprintDialogOpen] = useState(false);
+  const [selectedStoryForSprint, setSelectedStoryForSprint] = useState<{ id: string; title: string } | null>(null);
 
   const getDetailFields = (s: any) => [
     { label: 'Titre', value: s.title },
@@ -75,6 +88,17 @@ const UserStories: React.FC = () => {
     if (window.confirm('Supprimer cette User Story ?')) dispatch(deleteStory(id));
   };
 
+  const handleOpenSprintDialog = (storyId: string, storyTitle: string) => {
+    setSelectedStoryForSprint({ id: storyId, title: storyTitle });
+    setSprintDialogOpen(true);
+  };
+
+  const handleSprintSuccess = () => {
+    setGenSuccess('Story ajoutée au sprint avec succès !');
+    setTimeout(() => setGenSuccess(''), 4000);
+    dispatch(fetchStories({}));
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -102,16 +126,20 @@ const UserStories: React.FC = () => {
                   {story.acceptanceCriteria?.length > 0 && (
                     <Typography variant="caption" color="text.secondary" display="block">{story.acceptanceCriteria.length} critère(s) d'acceptation</Typography>
                   )}
-                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                    <Tooltip title="Générer les cas de test (IA)">
-                      <Button size="small" variant="outlined" startIcon={generating ? <CircularProgress size={16} /> : <AutoAwesome />}
-                        onClick={() => handleGenerate(story._id)} disabled={generating}>
-                        Générer Tests
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="Détail"><IconButton size="small" color="primary" onClick={() => setDetailStory(story)}><Visibility fontSize="small" /></IconButton></Tooltip>
-                    <IconButton size="small" onClick={() => handleOpen(story)}><Edit fontSize="small" /></IconButton>
-                    <IconButton size="small" color="error" onClick={() => handleDelete(story._id)}><Delete fontSize="small" /></IconButton>
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button size="small" variant="outlined" startIcon={<Science />}
+                      onClick={() => navigate(`/stories/${story._id}/tests`)}>
+                      🧪 Cas de Test ({story.testCount || 0})
+                    </Button>
+                    <Button size="small" variant="outlined" startIcon={<BugReport />}
+                      onClick={() => navigate(`/stories/${story._id}/bugs`)}>
+                      🐛 Bugs ({story.bugCount || 0})
+                    </Button>
+                    <Button size="small" variant="contained" color="primary" startIcon={<DirectionsRun />}
+                      onClick={() => handleOpenSprintDialog(story._id, story.title)}>
+                      Sprint
+                    </Button>
+                    <Tooltip title="Modifier"><IconButton size="small" onClick={() => handleOpen(story)}><Edit fontSize="small" /></IconButton></Tooltip>
                   </Box>
                 </CardContent>
               </Card>
@@ -143,7 +171,13 @@ const UserStories: React.FC = () => {
             </Grid>
             <Grid item xs={4}>
               <TextField fullWidth select label="Statut" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                {['draft', 'ready', 'in_progress', 'done'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                <MenuItem value="draft">Brouillon</MenuItem>
+                <MenuItem value="ready">Prêt</MenuItem>
+                <MenuItem value="todo">À faire</MenuItem>
+                <MenuItem value="in_progress">En cours</MenuItem>
+                <MenuItem value="ready_qa">Ready QA</MenuItem>
+                <MenuItem value="testing">Testing</MenuItem>
+                <MenuItem value="done">Terminé</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={4}>
@@ -161,6 +195,19 @@ const UserStories: React.FC = () => {
           <Button variant="contained" onClick={handleSave}>Sauvegarder</Button>
         </DialogActions>
       </Dialog>
+
+      {selectedStoryForSprint && (
+        <AddToSprintDialog
+          open={sprintDialogOpen}
+          onClose={() => {
+            setSprintDialogOpen(false);
+            setSelectedStoryForSprint(null);
+          }}
+          storyId={selectedStoryForSprint.id}
+          storyTitle={selectedStoryForSprint.title}
+          onSuccess={handleSprintSuccess}
+        />
+      )}
     </Box>
   );
 };

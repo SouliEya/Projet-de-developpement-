@@ -7,9 +7,9 @@ import { fetchCampaigns } from '../store/slices/campaignSlice';
 import {
   Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, MenuItem, CircularProgress, Chip, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, Alert, FormControlLabel, Checkbox
+  TableContainer, TableHead, TableRow, Paper, Alert, FormControlLabel, Checkbox, IconButton
 } from '@mui/material';
-import { PlayArrow, Add } from '@mui/icons-material';
+import { PlayArrow, Add, Edit } from '@mui/icons-material';
 
 const statusColors: any = { passed: 'success', failed: 'error', blocked: 'warning', skipped: 'default', not_run: 'info' };
 const statusLabels: any = { passed: 'Passé', failed: 'Échoué', blocked: 'Bloqué', skipped: 'Ignoré', not_run: 'Non exécuté' };
@@ -21,6 +21,7 @@ const Execution: React.FC = () => {
   const { campaigns } = useSelector((state: RootState) => state.campaigns);
 
   const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState({
     testCase: '', campaign: '', status: 'not_run', comment: '', duration: '',
@@ -33,20 +34,63 @@ const Execution: React.FC = () => {
     dispatch(fetchCampaigns({}));
   }, [dispatch]);
 
+  const handleEdit = (exec: any) => {
+    setEditId(exec._id);
+    setForm({
+      testCase: exec.testCase?._id || '',
+      campaign: exec.campaign?._id || '',
+      status: exec.status,
+      comment: exec.comment || '',
+      duration: exec.duration?.toString() || '',
+      autoCreateBug: false,
+    });
+    setOpen(true);
+  };
+
   const handleSubmit = async () => {
     const data = {
       ...form,
       duration: form.duration ? Number(form.duration) : undefined,
       campaign: form.campaign || undefined,
     };
-    const result = await dispatch(runExecution(data));
-    if (runExecution.fulfilled.match(result)) {
-      setSuccess('Exécution enregistrée !');
-      setTimeout(() => setSuccess(''), 3000);
-      setOpen(false);
-      setForm({ testCase: '', campaign: '', status: 'not_run', comment: '', duration: '', autoCreateBug: false });
-      dispatch(fetchExecutions({}));
+    
+    if (editId) {
+      // Mise à jour d'une exécution existante
+      try {
+        await fetch(`http://localhost:5000/api/executions/${editId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(data)
+        });
+        setSuccess('Exécution mise à jour !');
+        setTimeout(() => setSuccess(''), 3000);
+        setOpen(false);
+        setEditId(null);
+        setForm({ testCase: '', campaign: '', status: 'not_run', comment: '', duration: '', autoCreateBug: false });
+        dispatch(fetchExecutions({}));
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour:', error);
+      }
+    } else {
+      // Création d'une nouvelle exécution
+      const result = await dispatch(runExecution(data));
+      if (runExecution.fulfilled.match(result)) {
+        setSuccess('Exécution enregistrée !');
+        setTimeout(() => setSuccess(''), 3000);
+        setOpen(false);
+        setForm({ testCase: '', campaign: '', status: 'not_run', comment: '', duration: '', autoCreateBug: false });
+        dispatch(fetchExecutions({}));
+      }
     }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditId(null);
+    setForm({ testCase: '', campaign: '', status: 'not_run', comment: '', duration: '', autoCreateBug: false });
   };
 
   return (
@@ -73,6 +117,7 @@ const Execution: React.FC = () => {
                 <TableCell sx={{ fontWeight: 700 }}>Durée (min)</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Commentaire</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -103,10 +148,15 @@ const Execution: React.FC = () => {
                       {exec.comment || '—'}
                     </Typography>
                   </TableCell>
+                  <TableCell>
+                    <IconButton size="small" onClick={() => handleEdit(exec)} color="primary">
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               ))}
               {executions.length === 0 && (
-                <TableRow><TableCell colSpan={7} sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                <TableRow><TableCell colSpan={8} sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
                   Aucune exécution enregistrée.
                 </TableCell></TableRow>
               )}
@@ -115,11 +165,12 @@ const Execution: React.FC = () => {
         </TableContainer>
       )}
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Nouvelle Exécution</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>{editId ? 'Modifier l\'Exécution' : 'Nouvelle Exécution'}</DialogTitle>
         <DialogContent sx={{ pt: '16px !important' }}>
           <TextField fullWidth select label="Cas de Test" value={form.testCase}
-            onChange={(e) => setForm({ ...form, testCase: e.target.value })} required sx={{ mb: 2 }}>
+            onChange={(e) => setForm({ ...form, testCase: e.target.value })} required sx={{ mb: 2 }}
+            disabled={!!editId}>
             {testcases.map((tc: any) => (
               <MenuItem key={tc._id} value={tc._id}>{tc.testId} — {tc.title}</MenuItem>
             ))}
@@ -145,8 +196,10 @@ const Execution: React.FC = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Annuler</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={!form.testCase}>Enregistrer</Button>
+          <Button onClick={handleClose}>Annuler</Button>
+          <Button variant="contained" onClick={handleSubmit} disabled={!form.testCase}>
+            {editId ? 'Mettre à jour' : 'Enregistrer'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

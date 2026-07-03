@@ -10,8 +10,20 @@ import {
 } from '@mui/material';
 import { Edit, Delete, PersonAdd } from '@mui/icons-material';
 
-const roleLabels: any = { admin: 'Admin', qa_engineer: 'QA Engineer', test_manager: 'Test Manager', developer: 'Développeur' };
-const roleColors: any = { admin: 'error', qa_engineer: 'primary', test_manager: 'secondary', developer: 'default' };
+const roleLabels: any = { 
+  admin: 'Admin', 
+  qa_engineer: 'QA Engineer', 
+  test_manager: 'Test Manager', 
+  developer: 'Développeur',
+  product_owner: 'Product Owner'
+};
+const roleColors: any = { 
+  admin: 'error', 
+  qa_engineer: 'primary', 
+  test_manager: 'secondary', 
+  developer: 'default',
+  product_owner: 'success'
+};
 
 const Users: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -21,17 +33,17 @@ const Users: React.FC = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ firstName: '', lastName: '', role: 'qa_engineer', isActive: true });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', role: 'qa_engineer', isActive: true });
 
   useEffect(() => { dispatch(fetchUsers()); }, [dispatch]);
 
   const handleOpen = (user?: any) => {
     if (user) {
       setEditId(user._id);
-      setForm({ firstName: user.firstName, lastName: user.lastName, role: user.role, isActive: user.isActive });
+      setForm({ firstName: user.firstName, lastName: user.lastName, email: user.email, password: '', role: user.role, isActive: user.isActive });
     } else {
       setEditId(null);
-      setForm({ firstName: '', lastName: '', role: 'qa_engineer', isActive: true });
+      setForm({ firstName: '', lastName: '', email: '', password: '', role: 'qa_engineer', isActive: true });
     }
     setOpen(true);
   };
@@ -39,8 +51,23 @@ const Users: React.FC = () => {
   const handleSave = async () => {
     try {
       if (editId) {
-        await authAPI.updateUser(editId, form);
+        // Mise à jour d'un utilisateur existant
+        const updateData: any = { firstName: form.firstName, lastName: form.lastName, role: form.role, isActive: form.isActive };
+        if (form.password) {
+          updateData.password = form.password;
+        }
+        await authAPI.updateUser(editId, updateData);
         setSuccess('Utilisateur mis à jour.');
+      } else {
+        // Création d'un nouvel utilisateur
+        await authAPI.register({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          password: form.password,
+          role: form.role
+        });
+        setSuccess('Utilisateur créé avec succès.');
       }
       setOpen(false);
       dispatch(fetchUsers());
@@ -76,7 +103,12 @@ const Users: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" fontWeight={700}>Gestion des Utilisateurs</Typography>
-        <Chip label={`${users.length} utilisateur(s)`} color="primary" />
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Chip label={`${users.length} utilisateur(s)`} color="primary" />
+          <Button variant="contained" startIcon={<PersonAdd />} onClick={() => handleOpen()}>
+            Nouvel Utilisateur
+          </Button>
+        </Box>
       </Box>
 
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
@@ -125,12 +157,20 @@ const Users: React.FC = () => {
       )}
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Modifier l'utilisateur</DialogTitle>
+        <DialogTitle>{editId ? 'Modifier l\'utilisateur' : 'Nouvel Utilisateur'}</DialogTitle>
         <DialogContent sx={{ pt: '16px !important' }}>
           <TextField fullWidth label="Prénom" value={form.firstName}
-            onChange={(e) => setForm({ ...form, firstName: e.target.value })} sx={{ mb: 2 }} />
+            onChange={(e) => setForm({ ...form, firstName: e.target.value })} sx={{ mb: 2 }} required />
           <TextField fullWidth label="Nom" value={form.lastName}
-            onChange={(e) => setForm({ ...form, lastName: e.target.value })} sx={{ mb: 2 }} />
+            onChange={(e) => setForm({ ...form, lastName: e.target.value })} sx={{ mb: 2 }} required />
+          <TextField fullWidth label="Email" type="email" value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })} sx={{ mb: 2 }} 
+            required={!editId} disabled={!!editId} />
+          <TextField fullWidth label={editId ? 'Nouveau mot de passe (optionnel)' : 'Mot de passe'} 
+            type="password" value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })} sx={{ mb: 2 }} 
+            required={!editId}
+            helperText={editId ? 'Laissez vide pour ne pas changer le mot de passe' : 'Minimum 6 caractères'} />
           <TextField fullWidth select label="Rôle" value={form.role}
             onChange={(e) => setForm({ ...form, role: e.target.value })} sx={{ mb: 2 }}>
             {Object.entries(roleLabels).map(([k, v]) => <MenuItem key={k} value={k}>{v as string}</MenuItem>)}
@@ -138,7 +178,9 @@ const Users: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Annuler</Button>
-          <Button variant="contained" onClick={handleSave}>Sauvegarder</Button>
+          <Button variant="contained" onClick={handleSave}>
+            {editId ? 'Sauvegarder' : 'Créer'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
